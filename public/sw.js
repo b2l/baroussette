@@ -1,6 +1,7 @@
-const version = 'v3';
+const version = 'v7';
 
 self.addEventListener('install', event => {
+  console.log('installing service worker');
   event.waitUntil(
     caches
       .open(version)
@@ -11,6 +12,7 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
+  console.log('activating service worker');
   event.waitUntil(
     caches
       .keys()
@@ -22,5 +24,13 @@ self.addEventListener('activate', event => {
         )
       )
       .then(self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request).then(function(response) {
+      return response || fetch(event.request);
+    })
   );
 });

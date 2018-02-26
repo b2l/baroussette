@@ -115,7 +115,7 @@
       </p>
     </div>
 
-    <div class="content-server-down">
+    <div class="content-server-down hide">
       <p>
         Le serveur est actuellement injoinable, vous pouvez attendre ou essayer de rafraichir la page. Si cela persiste, appeler
         Nico!
@@ -146,7 +146,7 @@
     // Transform forms into ajax calls
     const forms = document.querySelectorAll('form')
     Array.prototype.forEach.call(forms, form => {
-      form.addEventListener('submit', e => ajaxCall(e, setStatus), false)
+      form.addEventListener('submit', ajaxCall, false)
     })
 
     // Take a submited form an replace it with an ajax call
@@ -163,7 +163,19 @@
         cache: 'default'
       };
 
-      fetch(url, init).then(callback)
+      fetch(url, init)
+        .then(res => {
+          if (!res.ok) throw res.error
+          this.done = true; return res
+        })
+        .then(res => res.json())
+        .then(status => status)
+        .then(setStatus)
+        .then(setServerUp)
+        .catch(err => {
+          this.done = true;
+          setServerDown()
+        })
     }
 
     // Get the thermostat status
@@ -180,25 +192,28 @@
           .then(status => status)
           .then(setStatus)
           .then(setServerUp)
-          .catch(setServerDown)
+          .catch(err => {
+            this.done = true;
+            setServerDown()
+          })
       }
     }
 
     function setServerUp() {
-      if (navigator.online) {
-        document.querySelector('.content-online').classList.remove('.hide')
-        document.querySelector('.content-offline').classList.add('.hide')
+      if (navigator.onLine) {
+        document.querySelector('.content-online').classList.remove('hide')
+        document.querySelector('.content-offline').classList.add('hide')
       } else {
-        document.querySelector('.content-offline').classList.remove('.hide')
-        document.querySelector('.content-online').classList.add('.hide')
+        document.querySelector('.content-offline').classList.remove('hide')
+        document.querySelector('.content-online').classList.add('hide')
       }
-      document.querySelector('.content-server-down').classList.add('.hide')
+      document.querySelector('.content-server-down').classList.add('hide')
     }
 
     function setServerDown() {
-      document.querySelector('.content-online').classList.add('.hide')
-      document.querySelector('.content-offline').classList.add('.hide')
-      document.querySelector('.content-server-down').classList.remove('.hide')
+      document.querySelector('.content-online').classList.add('hide')
+      document.querySelector('.content-offline').classList.add('hide')
+      document.querySelector('.content-server-down').classList.remove('hide')
     }
 
     // Update the DOM with the given status

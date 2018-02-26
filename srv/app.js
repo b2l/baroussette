@@ -3,9 +3,11 @@ const path = require('path');
 const rpi = require('../index');
 
 const app = express();
-app.use(express.static('public'));
+app.use(express.static(`${__dirname}/../public`));
 
-app.get('/', (req, res) => res.sendfile(path.resolve('public/index.html')));
+app.get('/', (req, res) =>
+  res.sendfile(path.resolve(`${__dirname}/../public/index.html`))
+);
 
 app.get('/status', (req, res) => {
   res.json({
