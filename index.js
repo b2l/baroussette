@@ -1,3 +1,4 @@
+var cache = require('memory-cache');
 const execSync = require('child_process').execSync;
 const PIN = 1;
 const OFF = 1;
@@ -31,6 +32,16 @@ function getStatus() {
   return status[value];
 }
 
+function readTemperature() {
+  const cachedTemp = cache.get('temp');
+  if (cachedTemp) return cachedTemp;
+
+  const cmd = `/home/pi/bin/read_temperature`;
+  const temperature = Number(execSync(cmd).toString());
+  cache.put('temp', temperature, 1000 * 60);
+  return temperature;
+}
+
 setOut();
 
 module.exports = {
@@ -38,4 +49,5 @@ module.exports = {
   getStatus,
   activeRemoteControl,
   disableRemoteControl,
+  readTemperature,
 };
