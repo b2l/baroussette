@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+import serial
+
+ser = serial.Serial('/dev/ttyACM0',9600)
+s = [0]
+s[0] = str(ser.readline())
+print s[0]
+
