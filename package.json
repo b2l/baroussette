@@ -1,0 +1,13 @@
+{
+  "name": "rasp-baroussette",
+  "version": "1.0.0",
+  "description": "Remote control the baroussette",
+  "main": "index.js",
+  "author": "Nicolas Medda <nicolas.medda@ling.fr>",
+  "license": "MIT",
+  "scripts": {
+    "on": "node index.js on",
+    "off": "node index.js off",
+    "read": "node index.js read"
+  }
+}
