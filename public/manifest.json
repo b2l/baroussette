@@ -1,0 +1,9 @@
+{
+  "short_name": "Baroussette",
+  "name": "Controle a distance du thermostat de la Baroussette",
+  "icons": [],
+  "start_url": "/",
+  "background_color": "#fff",
+  "theme_color": "#fefefe",
+  "display": "standalone"
+}

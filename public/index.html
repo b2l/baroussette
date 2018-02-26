@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Baroussette</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --active: #11c01a;
+      --disabled: #ee2020;
+      --gray: #cecece;
+      --text: #333;
+      --dark: #555;
+      --spacing: 15px;
+      --big-space: calc(var(--spacing) * 2);
+    }
+
+    body {
+      max-width: 400px;
+      margin: 30px auto;
+      padding: var(--spacing);
+      border: 1px solid var(--gray);
+      font-size: 1em;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2em;
+    }
+
+    #status {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: var(--text);
+      padding: 2px 5px;
+      margin-left: var(--spacing);
+    }
+
+    .enabled {
+      border-bottom: 2px dashed var(--active);
+    }
+
+    .disabled {
+      border-bottom: 2px dashed var(--disabled);
+    }
+
+    form {
+      margin: var(--big-space) auto;
+    }
+
+    .btn {
+      padding: 10px 5px;
+      box-shadow: none;
+      border: 1px solid var(--dark);
+      background: white;
+      color: var(--text);
+      border-radius: 4px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    .btn-block {
+      display: block;
+      width: 100%;
+    }
+
+    .hide {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    Thermostat Baroussette
+  </h1>
+
+  <div class="status-box">
+    Le control a distance est:
+    <span id="status"></span>
+  </div>
+
+  <form action="/enable" method="post">
+    <input class="btn btn-block enable" type="submit" value="Activer" />
+  </form>
+
+  <form action="/disable" method="post">
+    <input class="btn btn-block disable" type="submit" value="Desactiver" />
+  </form>
+
+  <script>
+    navigator.serviceWorker
+      .register('./sw.js')
+      .then(() => console.log('ServiceWorker registered'))
+      .catch(error => console.error('ServiceWorker registration failed: ', error))
+
+    const forms = document.querySelectorAll('form')
+    Array.prototype.forEach.call(forms, form => {
+      form.addEventListener('submit', ajaxCall, false)
+    })
+
+    function ajaxCall(e) {
+      e.preventDefault();
+
+      const url = e.target.getAttribute('action')
+      var headers = new Headers();
+
+      var init = {
+        method: e.target.getAttribute('method'),
+        headers,
+        mode: 'cors',
+        cache: 'default'
+      };
+
+      fetch(url, init).then(setStatus)
+    }
+
+    function getStatus() {
+      return fetch('/status').then(setStatus)
+    }
+
+    function setStatus(res) {
+      const $status = document.getElementById('status');
+      res.json()
+        .then(status => status.status)
+        .then(status => {
+          $status.innerHTML = status === "ON" ? "activé" : "désactivé"
+          $status.classList.remove('enabled', 'disabled')
+          const classname = status === 'ON' ? 'enabled' : 'disabled'
+          $status.classList.add(classname)
+          const btnclassname = status === 'ON' ? 'enable' : 'disable'
+          const btns = document.querySelectorAll('.btn')
+          Array.from(btns).forEach(btn => btn.classList.remove('hide'))
+          document.querySelector(`.btn.${btnclassname}`).classList.add('hide')
+        })
+    }
+
+    getStatus()
+  </script>
+</body>
+
+</html>
