@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="theme-color" content="#f9f9f9">
   <title>Baroussette</title>
   <link rel="manifest" href="manifest.json">
   <style>
@@ -16,14 +17,16 @@
       --dark: #555;
       --spacing: 15px;
       --big-space: calc(var(--spacing) * 2);
+      --bg: #f9f9f9;
     }
 
-    body {
+    .container {
       max-width: 400px;
       margin: 30px auto;
       padding: var(--spacing);
       border: 1px solid var(--gray);
       font-size: 1em;
+      background: var(--bg);
     }
 
     h1 {
@@ -70,39 +73,84 @@
     .hide {
       display: none;
     }
+
+    h1 img {
+      vertical-align: bottom;
+    }
   </style>
 </head>
 
 <body>
-  <h1>
-    Thermostat Baroussette
-  </h1>
+  <div class="container">
+    <header>
+      <h1>
+        <img src="icons/launcher-icon-1x.png" alt="logotype" /> Baroussette
+      </h1>
+    </header>
 
-  <div class="status-box">
-    Le control a distance est:
-    <span id="status"></span>
+    <div class="content-online">
+      <div class="status-box">
+        Le control a distance est:
+        <span id="status"></span>
+      </div>
+
+      <form action="/enable" method="post">
+        <input class="btn btn-block enable" type="submit" value="Activer" />
+      </form>
+
+      <form action="/disable" method="post">
+        <input class="btn btn-block disable" type="submit" value="Desactiver" />
+      </form>
+
+      <p>
+        La temperature est actuellement de
+        <span id="temperature"></span>ªC
+      </p>
+    </div>
+
+    <div class="content-offline hide">
+      <p>
+        Il semblerait que vous ne soyez pas connectez a Internet. Nous ne pouvons donc pas contacter le serveur. Essayez de vous
+        connecter d'abord!
+      </p>
+    </div>
+
+    <div class="content-server-down">
+      <p>
+        Le serveur est actuellement injoinable, vous pouvez attendre ou essayer de rafraichir la page. Si cela persiste, appeler
+        Nico!
+      </p>
+    </div>
   </div>
 
-  <form action="/enable" method="post">
-    <input class="btn btn-block enable" type="submit" value="Activer" />
-  </form>
-
-  <form action="/disable" method="post">
-    <input class="btn btn-block disable" type="submit" value="Desactiver" />
-  </form>
-
   <script>
+    // register service worker
     navigator.serviceWorker
       .register('./sw.js')
-      .then(() => console.log('ServiceWorker registered'))
-      .catch(error => console.error('ServiceWorker registration failed: ', error))
 
+    // setup / teardown
+    window.addEventListener('load', setup, false)
+    window.addEventListener('unload', tearDown, false)
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    function setup() {
+      updateOnlineStatus();
+      poll();
+    }
+
+    function tearDown() {
+      clearInterval(statusInterval)
+    }
+
+    // Transform forms into ajax calls
     const forms = document.querySelectorAll('form')
     Array.prototype.forEach.call(forms, form => {
-      form.addEventListener('submit', ajaxCall, false)
+      form.addEventListener('submit', e => ajaxCall(e, setStatus), false)
     })
 
-    function ajaxCall(e) {
+    // Take a submited form an replace it with an ajax call
+    function ajaxCall(e, callback) {
       e.preventDefault();
 
       const url = e.target.getAttribute('action')
@@ -115,30 +163,81 @@
         cache: 'default'
       };
 
-      fetch(url, init).then(setStatus)
+      fetch(url, init).then(callback)
     }
 
+    // Get the thermostat status
     function getStatus() {
-      return fetch('/status').then(setStatus)
+      if (this.done === undefined) this.done = true
+      if (navigator.onLine && this.done) {
+        this.done = false
+        fetch('/status')
+          .then(res => {
+            if (!res.ok) throw res.error
+            this.done = true; return res
+          })
+          .then(res => res.json())
+          .then(status => status)
+          .then(setStatus)
+          .then(setServerUp)
+          .catch(setServerDown)
+      }
     }
 
-    function setStatus(res) {
+    function setServerUp() {
+      if (navigator.online) {
+        document.querySelector('.content-online').classList.remove('.hide')
+        document.querySelector('.content-offline').classList.add('.hide')
+      } else {
+        document.querySelector('.content-offline').classList.remove('.hide')
+        document.querySelector('.content-online').classList.add('.hide')
+      }
+      document.querySelector('.content-server-down').classList.add('.hide')
+    }
+
+    function setServerDown() {
+      document.querySelector('.content-online').classList.add('.hide')
+      document.querySelector('.content-offline').classList.add('.hide')
+      document.querySelector('.content-server-down').classList.remove('.hide')
+    }
+
+    // Update the DOM with the given status
+    function setStatus(status) {
       const $status = document.getElementById('status');
-      res.json()
-        .then(status => status.status)
-        .then(status => {
-          $status.innerHTML = status === "ON" ? "activé" : "désactivé"
-          $status.classList.remove('enabled', 'disabled')
-          const classname = status === 'ON' ? 'enabled' : 'disabled'
-          $status.classList.add(classname)
-          const btnclassname = status === 'ON' ? 'enable' : 'disable'
-          const btns = document.querySelectorAll('.btn')
-          Array.from(btns).forEach(btn => btn.classList.remove('hide'))
-          document.querySelector(`.btn.${btnclassname}`).classList.add('hide')
-        })
+      const $temp = document.getElementById('temperature')
+      if (status.status === 'ON') {
+        $status.innerHTML = 'activé'
+        $status.classList.remove('disabled')
+        $status.classList.add('enabled')
+        document.querySelector('.btn.enable').classList.add('hide')
+        document.querySelector('.btn.disable').classList.remove('hide')
+      } else {
+        $status.innerHTML = 'désactivé'
+        $status.classList.add('disabled')
+        $status.classList.remove('enabled')
+        document.querySelector('.btn.disable').classList.add('hide')
+        document.querySelector('.btn.enable').classList.remove('hide')
+      }
+      $temp.innerHTML = status.temperature;
     }
 
-    getStatus()
+    // ask the server what's the thermostat status every 500ms
+    let statusInterval = null;
+    function poll() {
+      getStatus()
+      statusInterval = setInterval(getStatus, 3000)
+    }
+
+    function updateOnlineStatus(event) {
+      if (navigator.onLine) {
+        document.querySelector('.content-online').classList.remove('hide')
+        document.querySelector('.content-offline').classList.add('hide')
+      } else {
+        document.querySelector('.content-offline').classList.remove('hide')
+        document.querySelector('.content-online').classList.add('hide')
+      }
+    }
+
   </script>
 </body>
 

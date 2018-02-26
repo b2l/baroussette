@@ -1,9 +1,40 @@
 {
   "short_name": "Baroussette",
   "name": "Controle a distance du thermostat de la Baroussette",
-  "icons": [],
   "start_url": "/",
   "background_color": "#fff",
   "theme_color": "#fefefe",
-  "display": "standalone"
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icons/launcher-icon-1x.png",
+      "type": "image/png",
+      "sizes": "44x44"
+    },
+    {
+      "src": "icons/launcher-icon-2x.png",
+      "type": "image/png",
+      "sizes": "88x88"
+    },
+    {
+      "src": "icons/launcher-icon-3x.png",
+      "type": "image/png",
+      "sizes": "132x132"
+    },
+    {
+      "src": "icons/launcher-icon-4x.png",
+      "type": "image/png",
+      "sizes": "176x176"
+    },
+    {
+      "src": "icons/launcher-icon-5x.png",
+      "type": "image/png",
+      "sizes": "220x220"
+    },
+    {
+      "src": "icons/launcher-icon-12x.png",
+      "type": "image/png",
+      "sizes": "528x528"
+    }
+  ]
 }

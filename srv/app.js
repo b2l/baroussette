@@ -8,16 +8,24 @@ app.use(express.static('public'));
 app.get('/', (req, res) => res.sendfile(path.resolve('public/index.html')));
 
 app.get('/status', (req, res) => {
-  console.log(rpi.getStatus());
-  res.json({ status: rpi.getStatus() });
+  res.json({
+    status: rpi.getStatus(),
+    temperature: rpi.readTemperature(),
+  });
 });
 
 app.post('/enable', (req, res) => {
-  res.json({ status: rpi.activeRemoteControl() });
+  res.json({
+    status: rpi.activeRemoteControl(),
+    temperature: rpi.readTemperature(),
+  });
 });
 
 app.post('/disable', (req, res) => {
-  res.json({ status: rpi.disableRemoteControl() });
+  res.json({
+    status: rpi.disableRemoteControl(),
+    temperature: rpi.readTemperature(),
+  });
 });
 
 app.listen(3000, () =>
