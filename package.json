@@ -11,6 +11,7 @@
     "read": "node index.js read"
   },
   "dependencies": {
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "memory-cache": "^0.2.0"
   }
 }
