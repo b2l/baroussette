@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const express = require('express');
 const path = require('path');
 const rpi = require('../index');
@@ -10,6 +12,7 @@ app.get('/', (req, res) =>
 );
 
 app.get('/status', (req, res) => {
+  console.log('get status')
   res.json({
     status: rpi.getStatus(),
     temperature: rpi.readTemperature(),

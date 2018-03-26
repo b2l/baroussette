@@ -36,7 +36,7 @@ function readTemperature() {
   const cachedTemp = cache.get('temp');
   if (cachedTemp) return cachedTemp;
 
-  const cmd = `/home/pi/bin/read_temperature`;
+  const cmd = `/home/pi/baroussette/read_temperature`;
   const temperature = Number(execSync(cmd).toString());
   cache.put('temp', temperature, 1000 * 60);
   return temperature;
