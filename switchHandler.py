@@ -6,12 +6,12 @@ thermostatPin=12
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(switchPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(thermostatPin, GPIO.OUT)
 
 def my_callback(channel):
-    val = GPIO.input(thermostatPin)
-    if val is 0:
-        GPIO.write(thermostatPin, 1)
-    else:
-        GPIO.write(thermostatPin, 0)
+    GPIO.output(thermostatPinm, not GPIO.input(thermostatPin))
 
-GPIO.add_event_detect(switchPinpin, GPIO.RISING, callback=my_callback, bouncetime=300)
+GPIO.add_event_detect(switchPin, GPIO.RISING, callback=my_callback, bouncetime=300)
+
+while True:
+    pass

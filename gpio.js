@@ -2,22 +2,26 @@ const execSync = require('child_process').execSync;
 
 let __hasGpio;
 function hasGpio() {
-  const cmd = 'command gpio';
+  const cmd = 'command -v gpio';
   if (__hasGpio !== undefined) {
     return __hasGpio;
   }
+  let result;
   try {
     execSync(cmd)
-    __hasGpio = true;
+    result = true;
   } catch(e) {
-    __hasGpio = false;
+    result = false;
   }
+  __hasGpio = result;  
   return __hasGpio;
 }
+console.log(`hasGpio? ${hasGpio()}`)
+
 let status = 0;
 const gpio = {
-  ON: 0,
-  OFF: 1,
+  ON: 1,
+  OFF: 0,
   OUT: 'out',
   IN: 'in',
   setMode(pin, mode) {
