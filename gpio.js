@@ -25,12 +25,15 @@ const gpio = {
   OUT: 'out',
   IN: 'in',
   setMode(pin, mode) {
-    const cmd = `gpio mode ${pin} ${mode}`
+    const cmd = `gpio mode ${pin} ${mode}`;
     hasGpio() ? execSync(cmd).toString() : true;
   },
   write(pin, value) {
     const cmd = `gpio write ${pin} ${value}`;
-    status = hasGpio() ? execSync(cmd).toString() : value;
+    if (hasGpio()) {
+      execSync(cmd);
+    }
+    status = this.read(pin);
     return status
   },
   read(pin) {

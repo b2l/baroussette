@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from time import sleep
 import RPi.GPIO as GPIO
 
@@ -9,9 +11,10 @@ GPIO.setup(switchPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(thermostatPin, GPIO.OUT)
 
 def my_callback(channel):
-    GPIO.output(thermostatPinm, not GPIO.input(thermostatPin))
+    GPIO.output(thermostatPin, not GPIO.input(thermostatPin))
 
-GPIO.add_event_detect(switchPin, GPIO.RISING, callback=my_callback, bouncetime=300)
+GPIO.add_event_detect(switchPin, GPIO.BOTH, callback=my_callback, bouncetime=300)
 
 while True:
     pass
+    
