@@ -5,8 +5,8 @@ const gpio = require('./gpio')
 const PIN = 1;
 
 const status = {
-  0: 'ON',
-  1: 'OFF',
+  0: 'OFF',
+  1: 'ON',
 };
 
 function setOut() {
