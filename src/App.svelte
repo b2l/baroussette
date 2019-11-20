@@ -1,33 +1,36 @@
 <script>
+  import Temperature from "./Temperature.svelte";
+
   const currentTemperature = 7;
-  let hover = null;
+  const frozeControlTemp = 7;
   let target = null;
-  let increments = new Array(60).fill(false);
+  let increments = new Array(60).fill(false).map((_value, key) => key / 2);
   let mode = "Hors gel";
   let warming = false;
+  let tempColor = "var(--cold)";
+  let targetInteger;
+  let targetFloat;
 
   $: {
-    if (target) {
-      mode = "En chauffe";
-      warming = true;
-    }
+    tempColor =
+      target && target > frozeControlTemp ? "var(--orange)" : "var(--cold)";
   }
 
   const handleTouchMove = evt => {
     if (!evt.touches[0]) return;
-    if (!!target) target = null;
     const elem = document.elementFromPoint(
       evt.touches[0].clientX,
       evt.touches[0].clientY
     );
     if (elem.parentNode.children.length !== 60) return;
     const index = [...elem.parentNode.children].indexOf(elem);
-    hover = index;
+    target = index / 2;
+    if (target < frozeControlTemp)
+    target = frozeControlTemp
   };
 
   const handleTouchEnd = evt => {
-    target = hover;
-    hover = null;
+    warming = target && target;
   };
 </script>
 
@@ -37,11 +40,13 @@
     --primary: #4f5861;
     --dark-gray: #39424b;
     --gray: #f2f2f2;
-    --cold:  var(--dark-gray);
+    --cold: var(--dark-gray);
     --orange: #bd6311;
-    --max-temp: #BD3A11;
+    --max-temp: #bd3a11;
     --header-height: 60px;
     --padding: 20px;
+    --temp-color: var(--cold);
+    --increment-thickness: 2px;
   }
 
   header {
@@ -51,17 +56,12 @@
     left: 0;
     bottom: 0;
     right: 0;
-    box-shadow: 0px 0 20px rgba(0, 0, 0, 0.6);
-    z-index: 1;
+    text-align: center;
   }
 
-  .background {
-    width: calc(60*100vw);
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(left, var(--cold) 0%, var(--orange) 60%, var(--max-temp) 100%)
+  .bg-temp {
+    background: var(--temp-color);
+    transition: background-color 0.3s ease-in-out;
   }
 
   header h1 {
@@ -79,11 +79,6 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--dark-gray);
-    transition: background-color .3s ease-in-out;
-  }
-  main.warming {
-    background: var(--orange);
   }
 
   .grid {
@@ -112,11 +107,6 @@
     margin-top: auto;
   }
 
-  .temperature .number {
-    font-size: 120px;
-    display: block;
-  }
-
   .thermostat {
     position: relative;
     display: flex;
@@ -128,7 +118,7 @@
 
   .thermostat .increment {
     display: block;
-    width: 1px;
+    width: var(--increment-thickness);
     height: 44px;
     background: linear-gradient(
       180deg,
@@ -137,31 +127,29 @@
     );
   }
 
-  .thermostat .increment.hover {
-    background: var(--white);
-    width: 2px;
-    height: 46px;
-    position: relative;
+  .thermostat .increment.disabled {
+    opacity: .5;
   }
-  .thermostat .increment .value {
-    display: none;
+
+  .thermostat .increment.active {
+    background: rgba(255, 255, 255, 0.8);
   }
 
   .thermostat .increment.current {
     background: var(--white);
-    width: 2px;
-    height: 46px;
+    width: calc(2 * var(--increment-thickness));
     position: relative;
   }
   .thermostat .increment .current-value {
     position: absolute;
-    top: -40px;
+    bottom: 50px;
     color: var(--white);
-    font-size: 20px;
+    left: 5px;
+    font-size: 9px;
   }
 
   .thermostat .increment.target {
-    width: 2px;
+    width: calc(2 * var(--increment-thickness));
     position: relative;
   }
   .thermostat .increment.target::before {
@@ -176,25 +164,89 @@
 
   .thermostat .increment .target-value {
     position: absolute;
-    top: -50px;
+    bottom: 50px;
     color: var(--white);
-    font-size: 30px;
+    font-size: 9px;
+    left: 5px;
+  }
+
+  @media only screen and (orientation: landscape) {
+    h1 {
+      padding: 0;
+    }
+    .grid {
+      grid-template-columns: 1fr 3fr 1fr;
+      grid-template-rows: initial;
+    }
+
+    .temperature {
+      margin-top: initial;
+    }
+
+    .thermostat {
+      flex-direction: column-reverse;
+      height: calc(100% - 2 * var(--padding));
+      width: 50px;
+      padding: 1px 4px;
+      margin: var(--padding);
+      margin-left: auto;
+    }
+
+    .thermostat .increment {
+      height: var(--increment-thickness);
+      width: 44px;
+      background: linear-gradient(
+        90deg,
+        rgba(196, 196, 196, 0) 0%,
+        rgba(196, 196, 196, 0.6) 43.23%
+      );
+    }
+
+    .thermostat .increment.current {
+      height: calc(2 * var(--increment-thickness));
+      width: 44px;
+    }
+    .thermostat .increment .current-value {
+      right: 60px;
+      top: -3em;
+      bottom: auto;
+      left: auto;
+    }
+
+    .thermostat .increment.target {
+      height: calc(2 * var(--increment-thickness));
+    }
+    .thermostat .increment.target::before {
+      left: -10px;
+      width: 54px;
+      height: 4px;
+      top: 0;
+      background: var(--white);
+    }
+
+    .thermostat .increment .target-value {
+      right: 20px;
+      bottom: auto;
+      left: auto;
+    }
+  }
+  .main-temp {
+    font-size: 40px;
   }
 </style>
 
-<header>
+<header class="bg-temp" style="--temp-color:{tempColor}">
   <h1>Baroussette</h1>
 </header>
-<main>
-  <div class="background"></div>
+<main class="bg-temp" style="--temp-color:{tempColor}">
   <div class="grid">
     <section class="humidity">
       humidite
       <span class="number">50%</span>
     </section>
-    <section class="temperature">
-      Hors gel
-      <span class="number">7</span>
+    <section class="temperature main-temp">
+      {#if warming}En chauffe{:else}Hors gel{/if}
+      <Temperature temp={currentTemperature} />
     </section>
 
     <section
@@ -202,18 +254,22 @@
       on:touchstart={handleTouchMove}
       on:touchmove={handleTouchMove}
       on:touchend={handleTouchEnd}>
-      {#each increments as increment, i}
+
+      {#each increments as increment}
         <div
           class="increment"
-          class:hover={i === hover}
-          class:target={i === target}
-          class:current={i / 2 === currentTemperature}>
-          {#if i / 2 === currentTemperature || hover === i}
-            <div class="current-value">{i / 2}</div>
-          {:else if i === target}
-            <div class="target-value">{i / 2}</div>
-          {:else}
-            <div class="value">{i / 2}</div>
+          class:target={increment === target}
+          class:current={increment === currentTemperature}
+          class:disabled={increment < frozeControlTemp}
+          class:active={increment > currentTemperature && increment < target}>
+          {#if increment === currentTemperature}
+            <div class="current-value">
+              <Temperature temp={increment} />
+            </div>
+          {:else if increment === target}
+            <div class="target-value">
+              <Temperature temp={increment} />
+            </div>
           {/if}
         </div>
       {/each}
